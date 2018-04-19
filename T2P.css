@@ -1,0 +1,99 @@
+h1{
+	text-align:center;
+}
+.hidden{
+    display:none;
+}
+
+table p{
+	position:relative;
+	left:20px;
+	width:95%;
+}
+table{
+    margin: 0 auto;
+    width:100%;
+}
+
+tr{
+	border-collapse: collapse;
+	margin: 0 auto;
+	width:70%;
+}
+td{
+	border-collapse: collapse;
+	display:block;
+	margin: 0 auto;
+	border:1px solid;
+	width:80%;
+}
+
+textarea{
+	height:100px;
+	width:90%;
+}
+
+.inner_table{
+	display:block;
+	margin: 0 auto;
+	width:75%;
+}
+
+.a_tags{
+	position:relative;
+	left:50%;
+}
+p{
+	font-size: 13px;
+}
+
+#tttt{
+	border:1px solid;
+}
+
+#all{
+	position:absolute;
+	width:1080px;
+	left:30px;
+	border:1px solid;
+	border-radius:10px
+}
+
+
+#dialog{
+	display:none;
+	position:absolute;
+	left:200px;
+	top:150px;
+	width:400px;
+	height:200px;
+	background-color:#ffffff;
+	border: solid 2px #000000;
+	z-index: 2;
+
+}
+#dialog_yes{
+	position:absolute;
+	left:100px;
+	top:150px;
+}
+
+#dialog_no{
+	position:absolute;
+	left:220px;
+	top:150px;
+}
+#dialog button{
+	font-size: 1.3em;
+	padding: 5px 10px;
+	border-radius:3px;
+
+}
+
+#dialog_content{
+	position:relative;
+	top:50px;
+	text-align:center;
+}
+
+

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<head>
+<title>Jquery_test</title>
+<style></style>
+<script type="text/javascript" src="jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="main_vie.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="content-style-type" content="text/css">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="T2P.css" type="text/css" media="screen">
+<div id="all">
+<?php
+if(isset($_GET["sled"])){
+	$sled_name = "sled_".$_GET["sled"];
+}else{
+	header('Location: http://~');
+	//データが入ってなければ、スレッド一覧にリダイレクト
+}
+//データベース0番目のnew_sledがtrueだったら新規sled製作を表示
+
+//続いてそれ以外の場合は普通にデータを取ってくる
+//Ifで分岐させるときにすごく時間かかるとめんどくさいので、最初は一ライン
+//このファイルに最初にリダイレクトされた時点では、テーブルが作成されていないので注意
+
+$table_name = "sled_list";
+$sled_num = intval($_GET["sled"]);
+//この部分を書き換えて使う
+
+require_once("./conection.php");
+$mysqli = db_connect("wolfnet-twei_sled");
+//スレッドに接続
+$sql = "SELECT * FROM ".$table_name." WHERE No = ".$sled_num;
+//こちらにリダイレクトする前に作ったリストにアクセスし、そのナンバーだけ取ってくる
+
+$result = $mysqli -> query($sql);
+
+foreach($result as $row){
+	$new_sled = $row["new_sled"];
+	$count = $row["count"]+1;
+	$title = $row["title"];
+}
+
+mysqli_free_result($result);
+//結果セットの開放
+
+
+if($new_sled == false){
+	echo "<h1>".$title."(新規投稿以外未完成です。押さないで)</h1>";
+	//この部分にタイトルを表示
+	//sled_listの
+	echo "<table>";
+	$mysqli_sled = db_connect("wolfnet-twei_sled_box");
+	$sql_sled = "SELECT * FROM ".$sled_name." ORDER BY No ASC";
+	
+	$result_sled = $mysqli_sled -> query($sql_sled);
+	$rows = $result_sled->num_rows;
+	$last = 0;
+	
+	foreach($result_sled as $row){
+		$last++;
+		if($row["No"]=="001"){
+			echo "<tr><td id='sled_".$sled_num."_".$row["No"]."' class='".$row["user_name"]." 0'>\n";
+			//classの0はレス数
+			//echo "<p>".$row["No"]."　タイトル: ".$row['title']."</p>\n";
+			//よく考えたら毎回タイトル入れられても困るよね
+			//そうするとそもそも、タイトルはリストに入れないてきな
+			$No = str_replace("_",".",floatval($row["No"]));
+			echo "<p>No.".$No."　　ユーザー: ".$row['user_name']."　　date:　".$row['post_date']."</p>\n";
+			$content = str_replace("\n","<br>",$row["content"]);
+			//echo "<p>".$row['content']."</p>\n";
+			echo "<p id='sled_content_".$row["No"]."'>".$content."</p>\n";
+			echo "<p><a href='javascript:void(0)' onclick='res(".$row["No"].",".$count.")'>res</a>　
+				<a href='javascript:void(0)'>link</a>　
+				<a href='javascript:void(0)' onclick='edit_makeButton(".$row["No"].",".$sled_num.")'>edit</a>　
+				<a href='javascript:void(0)' onclick='dialog(\"del\",".$row["No"].",".$sled_num.")'>del</a>　
+				<input type='checkbox'></input></p>";
+			if($rows === $last){
+				echo "<p><button onclick='new_post()'>新規投稿</button></p>";
+			}
+			echo "</td></tr>\n";
+			echo "<tr id = 'res_".$row["No"]."'></tr>\n";
+		}else{
+			if(is_int($row["No"])){
+				echo "<tr><td id='sled_".$sled_num."_".$row["No"]."' class='".$row["user_name"]." 0'>\n";
+			}else{
+				$replace = str_replace(".", "_", $row["No"]);
+				echo "<td id='sled_".$sled_num."_".$replace."' class='".$row["user_name"]." 0'></p>\n";
+			}
+			//echo "<p>".$row["No"]."　タイトル: ".$row['title']."</p>\n";
+			$No = str_replace("_",".",floatval($row["No"]));
+			echo "<p>No.".$No."　　ユーザー: ".$row['user_name']."　　date:　".$row['post_date']."</p>\n";
+			$content = str_replace("\n","<br>",$row["content"]);
+			//echo "<p>".$row['content']."</p>\n";
+			echo "<p id='sled_content_".$row["No"]."'>".$content."</p>\n";
+			echo "<p><a href='javascript:void(0)' onclick='res(".$row["No"].",".$count.")'>res</a>　
+				<a href='javascript:void(0)'>link</a>　
+				<a href='javascript:void(0)' onclick='edit_makeButton(".$row["No"].",".$sled_num.")'>edit</a>　
+				<a href='javascript:void(0)' onclick='dialog(\"del\",".$row["No"].",".$sled_num.")'>del</a>　
+				<input type='checkbox'></input></p>";
+			
+			echo "</td></tr>\n";
+			echo "<tr id = 'res_".$replace."'></tr>\n";
+			//res();の引数を$row["no"]にして飛ばす
+			//ajaxでデータを入れるかどうか
+			//TDのIDを飛ばして、その下にAppendする必要がある
+			//違う、TRタグに入れないとPタグと併記になってしまう→それで構わないかというと、構わない気もする
+			//閉じるを押したらRes窓を閉じる設定にしたいが、その場合書き込む方式だとめんどくさいか
+			//また書き込む場所はこのタグの上でないといけないので・・・
+			//やはりhiddennにしておいたほうが簡単かも
+			//であれば、SpanタグをHiddenにしておいて、appendchildしてから表示させる？
+			//事前にSpanタグを仕込んでおけるなら、それにclassを設定して右に寄せることも簡単
+
+			//そろそろTrタグの横の長さも設定していく頃合いか
+			//resブロックの場合は元ID.1を表示していく
+			//resres(二回目)ブロックの場合はID.res.1を表示
+			//resres以降は何チェーンつないでも二回目のブロックを表示
+			//またこの数はSubcountデータからはじく(返信数は記録しない)
+		}
+	}
+	echo "<tr><td><p><button onclick='new_post()'>新規投稿</button></p></tr></td>";
+	
+	
+}else{
+
+echo <<<EOD
+	<script type = 'text/javascript'>
+		window.onload =function(){
+			new_post()
+		};
+	</script>
+EOD;
+
+
+echo "\n<table>";
+	//ここを表示したりしなかったりするシステムにすることでだいぶ楽になる
+}
+
+//新規作成をひらく
+	$form = array(
+		"<td id=\"sled_".$sled_num."_".$count."\">\n",
+		"<span class=\"inner_table\">",
+		"<p class=\"close\"><a href=\"javascript:void(0)\" onclick=\"post_close()\">close</a></p>",
+		"<p>ユーザー名: <input type=\"text\"></input></p>\n",
+		"<p><textarea></textarea></p>\n",
+		"<p><button onclick=\"sled_post(0)\">送信</button>\n",
+		"<span class=\"a_tags\"><a href=\"javascript:void(0)\">添付</a>\n",
+		"<a href=\"javascript:void(0)\">リンク</a>\n",
+		"<a href=\"javascript:void(0)\">カラー</a>\n",
+		"<a href=\"javascript:void(0)\">A</a></span>\n",
+		"</span>",
+		"</td>"
+	);
+		
+	$sled_array = array(
+		"$sled_name",
+		$sled_num,
+		$count
+	);
+	echo "<tr id=\"new_post\" class=\"hidden\">";
+	for ($i=0; $i<count($form); $i++){
+		if($i == 3 && $count == 1){
+			echo "<p>No.".$count."　タイトル: <input type='text'></input></p>\n";
+
+		}
+		if($i == 3 && $count != 1){
+			echo "<p>No.".$count."</p>\n";
+		}
+		echo $form[$i];
+	}
+	
+	echo "</tr></table>";
+	
+	//この部分を文字列として送る？
+	//文字列を配列に送る
+	
+	//ここで新規板のフラグを殺す？
+	
+	$mysqli->close();
+	
+
+?>
+
+</div>
+<script id="script" src="main_vie.js"
+    data-stack='<?php echo json_encode($form); ?>'
+    data-sled='<?php echo json_encode($sled_array); ?>'
+></script>
+
+<div id="dialog">
+	<p id="dialog_content">ここに内容が表示される</p>
+	<div id="button_set">
+		<div id="y_n">
+			<button id="dialog_yes" value="yes" class="dammy" autofocus>YES</button>
+			<button id="dialog_no" value="no" class="0">NO</button>
+		</div>
+		<div id="only_ok">
+			<button id="dialog_ok" value="ok" class="dammy" autofocus>OK</button>
+		</div>
+	</div>
+</div>
+
+
+
+
+
+

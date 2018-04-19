@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<head>
+<title>Jquery_test</title>
+<style></style>
+<script type="text/javascript" src="../jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="../main_vie.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="content-style-type" content="text/css">
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="../T2P.css" type="text/css" media="screen">
+<div id="all">
+<?php
+//データベース0番目のnew_sledがtrueだったら新規sled製作を表示
+
+//続いてそれ以外の場合は普通にデータを取ってくる
+//Ifで分岐させるときにすごく時間かかるとめんどくさいので、最初は一ライン
+//このファイルに最初にリダイレクトされた時点では、テーブルが作成されていないので注意
+
+$table_name = "sled_list";
+$sled_num = 0;
+$sled_name = "sled_0000";
+//この部分を書き換えて使う
+
+require_once("./conection.php");
+$mysqli = db_connect("sled");
+//スレッドに接続
+$sql = "SELECT * FROM ".$table_name." WHERE No = ".$sled_num;
+//こちらにリダイレクトする前に作ったリストにアクセスし、そのナンバーだけ取ってくる
+
+$result = $mysqli -> query($sql);
+
+foreach($result as $row){
+	$new_sled = $row["new_sled"];
+	$count = $row["count"]+1;
+	$title = $row["title"];
+}
+
+mysqli_free_result($result);
+//結果セットの開放
+
+
+if($new_sled == false){
+	echo "<h1>".$title."</h1>";
+	//この部分にタイトルを表示
+	//sled_listの
+	echo "<table>";
+	$mysqli_sled = db_connect("sled_box");
+	$sql_sled = "SELECT * FROM ".$sled_name;
+	$result_sled = $mysqli_sled -> query($sql_sled);
+	echo "<tr>\n";
+	foreach($result_sled as $row){
+		if($row["no"]==0){
+			echo "<td id='sled_".$sled_num."_".$row["no"]."' class='".$row["user_name"]."'></p>\n";
+			//echo "<p>".$row["no"]."　タイトル: ".$row['title']."</p>\n";
+			//よく考えたら毎回タイトル入れられても困るよね
+			//そうするとそもそも、タイトルはリストに入れないてきな
+			echo "<p>No.".$row["no"]."</p>\n";
+			echo "<p>ユーザー名: ".$row['user_name']."</p>\n";
+			echo "<p>".$row['content']."</p>\n";
+			echo "<p><a href='javascript:void(0)' onclick='res(".$row["no"].")'>res</a>
+				<a href='javascript:void(0)'>link</a>
+				<a href='javascript:void(0)'>edit</a>
+				<a href='javascript:void(0)'>del</a>
+				<input type='checkbox'></input></p>";
+			echo "<span id = 'res_".$row["no"]."' class='first_res'></span>";
+			echo "</td>\n";
+		}else{
+			echo "<td id='sled_".$sled_num."_".$row["no"]."' class='".$row["user_name"]."'></p>\n";
+			//echo "<p>".$row["no"]."　タイトル: ".$row['title']."</p>\n";
+			echo "<p>No.".$row["no"]."</p>\n";
+			echo "<p>ユーザー名: ".$row['user_name']."</p>\n";
+			echo "<p>".$row['content']."</p>\n";
+			echo "<p><a href='javascript:void(0)' onclick='res(".$row["no"].")'>res</a>
+				<a href='javascript:void(0)'>link</a>
+				<a href='javascript:void(0)'>edit</a>
+				<a href='javascript:void(0)'>del</a>
+				<input type='checkbox'></input></p>";
+			echo "<span id = 'res_".$row["no"]."' class='first_res'></span>";
+			echo "</td>\n";
+			//res();の引数を$row["no"]にして飛ばす
+			//ajaxでデータを入れるかどうか
+			//TDのIDを飛ばして、その下にAppendする必要がある
+			//違う、TRタグに入れないとPタグと併記になってしまう→それで構わないかというと、構わない気もする
+			//閉じるを押したらRes窓を閉じる設定にしたいが、その場合書き込む方式だとめんどくさいか
+			//また書き込む場所はこのタグの上でないといけないので・・・
+			//やはりhiddennにしておいたほうが簡単かも
+			//であれば、SpanタグをHiddenにしておいて、appendchildしてから表示させる？
+			//事前にSpanタグを仕込んでおけるなら、それにclassを設定して右に寄せることも簡単
+
+			//そろそろTrタグの横の長さも設定していく頃合いか
+			//resブロックの場合は元ID.1を表示していく
+			//resres(二回目)ブロックの場合はID.res.1を表示
+			//resres以降は何チェーンつないでも二回目のブロックを表示
+			//またこの数はSubcountデータからはじく(返信数は記録しない)
+		}
+	}
+	
+	echo "<p><button onclick='new_post()'>新規投稿</button></p>";
+	echo "</tr>\n";
+	
+}else{
+
+echo <<<EOD
+	<script type = 'text/javascript'>
+		window.onload =function(){
+			$(".hidden").css("display","block");
+		};
+	</script>
+EOD;
+
+
+echo "\n<table>";
+	//ここを表示したりしなかったりするシステムにすることでだいぶ楽になる
+}
+
+//新規作成をひらく
+	$form = array(
+		"<tr id='".$count."' class='hidden'><td id='sled_".$sled_num."_1'>\n",
+		"<span class='inner_table'>",
+		
+		"<p>ユーザー名: <input type='text'></input></p>\n",
+		"<p><textarea></textarea></p>\n",
+		"<p><button onclick='sled_post(".$sled_name.",".$sled_num.")'>送信</button>\n",
+		"<span class='a_tags'><a href='javascript:void(0)'>添付</a>\n",
+		"<a href='javascript:void(0)'>リンク</a>\n",
+		"<a href='javascript:void(0)'>カラー</a>\n",
+		"<a href='javascript:void(0)'>A</a></span>\n",
+		"</span>",
+		"</td></tr>"
+		);
+		
+	for ($i=0; $i<count($form); $i++){
+		if($i == 2 && $count == 1){
+			echo "<p>No.".$count."　タイトル: <input type='text'></input></p>\n";
+
+		}
+		echo $form[$i];
+	}
+	
+	echo "</table>";
+	
+	//この部分を文字列として送る？
+	//ニューポストはいらないのでは
+	//文字列を配列に送る
+	echo "<span id='array' class='hidden' date-arr = ".$form."></span>";
+	
+	//ここで新規板のフラグを殺す？
+
+?>
+</div>

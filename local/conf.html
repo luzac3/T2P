@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<head>
+<title>Jquery_test</title>
+<style></style>
+<script type="text/javascript" src="jquery-3.1.1.min.js"></script>
+<script type="text/javascript" src="main_vie.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="content-style-type" content="text/css">
+<meta name="robots" content="noindex, nofollow">
+<!--
+<link rel="stylesheet" href="special.css" type="text/css" media="screen">
+<link rel="stylesheet" href="pop_up.css" type="text/css" media="screen">
+スタイルシート、早めに作ってね
+-->
+</head>
+
+<div id="conference"><span class="center">
+	<h1>東方TRPGプロジェクト(T2P)・仮会議用掲示板</h1><br>
+	＊MG用連絡掲示板(仮)です。本来の掲示板が完成するまえではこちらで連絡をします＊</span><br>
+	<span>まず全員、trelloのアカウント取って、ユーザー名を教えてください</span><br>
+	<span>ついでなので掲示板に書き込んでおいてください。trelloという名前の板です</span><br>
+	<span>追伸：大急ぎで作ったので、雑ですまん</span><br><br>
+	<br>
+</div>
+<div>
+	<a href="javascript:void(0)" onclick="page_gene()">スレッド新規作成</a>
+	<!--
+		作成画面にジャンプ。ここはさすがにページ遷移はさむか？
+		別にはさまなくてもそれほど問題にならんかコレ
+	-->
+</div><br>
+
+<table><tr>
+	<th>No.(ID)</th>
+	<th>タイトル</th>
+	<th>投稿数</th>
+	<th>最終投稿日</th>
+	<th>マーク</th></tr>
+<?php
+	$table_name = "sled_list";
+	require_once("./conection.php");
+	$mysqli = db_connect("sled");
+	$sql="SELECT * FROM ".$table_name;
+	$result = $mysqli -> query($sql);
+	//sled_listからデータを取得
+	
+	foreach($result as $row){
+		
+		if($row['new_sled']==true){
+		//新規スレッドができてしまったらはじく
+			continue;
+		}
+		if($row["No"]==0){
+			continue;
+		}
+		$url_num = $row['No'];
+		$url_len =count($url_num);
+		for($i=0; $url_len<3; $i++){
+			$url_len =mb_strlen($url_num);
+			$url_num =0 . $url_num;
+		}
+		$url = "sled_.html?sled=".$url_num;
+		$last_post = substr($row['last_post'], 0, -5);
+		//後ろの五文字を削除
+		
+		echo "<tr>";
+		echo "<td>".$row['No']."</td>\n";
+		echo "<td><a href=".$url.">".$row['title']."</a></td>\n";
+		echo "<td>".$row['count']."(".$row['count_sub'].")</td>\n";
+		echo "<td>".$last_post."</td>\n";
+		if($row['mark']==true){
+			echo "<td><input type='checkbox' id='mark_".$row["No"]."' value='".$row["No"]."' class='false' checked='checked'></input></td>\n";
+		}else{
+			echo "<td><input type='checkbox' id='mark_".$row["No"]."' value='".$row["No"]."' class='true'></input></td>\n";
+		}
+		//onchangeを仕込むまで、何事も起こらないけど、チェック用
+		echo "</tr>";
+	}
+
+?>
+<!--
+本当はここにソート用の記号を入れておく
+ID,投稿日でソート。タイトルでのソートいるかな
+-->
+<!--
+ここまでは共通部分
+
+ここから部屋ごとなのでPHPでデータとってきて作成する
+
+まずデータベースを作るところから。
+作成したデータベースからデータを取る。
+-->
+
+</table>
+<!--
+新規作成を押すと、まずデータベースが生成される。
+データベースは基本的にNullで生成され、new_sledにtrueが挿入される
+続いて、定められたデータに従って自動的にファイルが生成される。
+
+
+
+データベースのナンバーは、
+タイトルは、全データベースのナンバーを管理しているテーブル、Sled_numから取得して1を足して生成
+生成したらそのままデータをデータベースに返す
+ファイルはデフォルトフォーマットのファイルをコピーする
+生成されたファイル上でテキストエリアを表示し、送信すると内容がデータベースに登録され、その後はそのデータを表示するようになる。
+-->
+
